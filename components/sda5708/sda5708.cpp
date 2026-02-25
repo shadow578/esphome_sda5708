@@ -6,6 +6,7 @@ namespace esphome::sda5708
 {
   static const char *const TAG = "sda5708";
 
+#pragma region ESPHome Component Implementation
   void SDA5708Component::setup()
   {
     this->data_pin_->setup(); // OUTPUT
@@ -20,7 +21,7 @@ namespace esphome::sda5708
     this->reset_pin_->setup();             // OUTPUT
     this->reset_pin_->digital_write(true); // active LOW
 
-    // TODO this->reset();
+    this->screen_reset();
   }
 
   void SDA5708Component::dump_config()
@@ -56,9 +57,24 @@ namespace esphome::sda5708
 
   void SDA5708Component::display()
   {
-    // TODO write buffer to display
-  }
+    const SDAGlyph_t smile = {
+        0b00000,
+        0b01010,
+        0b00000,
+        0b00000,
+        0b10001,
+        0b01110,
+        0b00000 //
+    };
 
+    for (uint8_t i = 0; i < this->display_buffer_.size(); i++)
+    {
+      write_glyph(i, smile); // TODO no font yet :)
+    }
+  }
+#pragma endregion
+
+#pragma region Print & Writer API
   uint8_t SDA5708Component::print(uint8_t pos, const char *str)
   {
     if (pos >= this->display_buffer_.size())
@@ -122,5 +138,113 @@ namespace esphome::sda5708
   {
     return strftime(0, format, time);
   }
+#pragma endregion
 
+#pragma region High-Level Screen API
+  void SDA5708Component::screen_clear()
+  {
+    this->control_register_.m_bCLR = true;
+    write_control_register(this->control_register_);
+
+    // set CLR back to normal operation after clearing
+    this->control_register_.m_bCLR = false;
+    write_control_register(this->control_register_);
+  }
+
+  void SDA5708Component::set_brightness(const uint8_t brightness)
+  {
+    // invert brightness level for control register (0 -> 7, 7 -> 0)
+    this->control_register_.m_nBR = 7 - (brightness & 0b111);
+    write_control_register(this->control_register_);
+  }
+
+  void SDA5708Component::set_peak_current(const bool low_peak_current)
+  {
+    this->control_register_.m_bIP = low_peak_current;
+    write_control_register(this->control_register_);
+  }
+
+  void SDA5708Component::write_glyph(const uint8_t digit, const SDAGlyph_t &glyph) const
+  {
+    select_digit(digit);
+    write_digit_data(glyph);
+  }
+#pragma endregion
+
+#pragma region Low-Level API
+  void SDA5708Component::screen_reset()
+  {
+    // #RESET LOW to reset
+    this->reset_pin_->digital_write(false);
+    screen_delay();
+
+    // #RESET HIGH to end reset
+    this->reset_pin_->digital_write(true);
+    screen_delay();
+
+    // reset internal control register mirror to default values
+    control_register_ = SDAControlRegister();
+  }
+
+  void SDA5708Component::write_control_register(const SDAControlRegister &data) const
+  {
+    uint8_t cr = 0b11000000;            // select control register with D7=1, D6=1 and D4=0
+    cr |= (data.m_bCLR ? 0 : (1 << 5)); // CLR bit (active low) on D5
+    cr |= (data.m_bIP ? (1 << 4) : 0);  // IP bit on D4
+    cr |= (data.m_nBR & 0b111);         // BR bits on D2-D0
+
+    write_byte(cr);
+  }
+
+  void SDA5708Component::select_digit(const uint8_t digit) const
+  {
+    if (digit > 7)
+      return;
+
+    uint8_t cs = 0b10100000; // address register on D7=1, D6=0, D5=1
+    cs |= (digit & 0b111);   // digit idx on D2-D0
+
+    write_byte(cs);
+  }
+
+  void SDA5708Component::write_digit_data(const SDAGlyph_t &data) const
+  {
+    for (int i = 0; i < 7; i++)
+    {
+      uint8_t cd = 0b00000000;   // column data register with D7=0, D6=0, D5=0
+      cd |= (data[i] & 0b11111); // remaining 5 bits for column data
+
+      write_byte(cd);
+    }
+  }
+
+  void SDA5708Component::write_byte(const uint8_t data) const
+  {
+    // #LOAD LOW to start transfer
+    this->load_pin_->digital_write(false);
+
+    // shift out 8 bits, LSB first
+    for (int i = 0; i < 8; i++)
+    {
+      this->data_pin_->digital_write((data >> i) & 0x01);
+
+      this->clock_pin_->digital_write(true);
+      screen_delay();
+      this->clock_pin_->digital_write(false);
+      screen_delay();
+    }
+
+    // #LOAD HIGH to end transfer
+    this->load_pin_->digital_write(true);
+
+    // add a slight delay after each byte to allow
+    // the screen to process the data
+    screen_delay();
+  }
+
+  void SDA5708Component::screen_delay() const
+  {
+    // TODO insert delay here
+  }
+#pragma endregion
 } // namespace esphome::sda5708
