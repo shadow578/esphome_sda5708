@@ -146,7 +146,7 @@ async def custom_glyph_to_code(config):
         row_data = 0
         for i, c in enumerate(row):
             if c == '#':
-                row_data |= (1 << i)
+                row_data |= (1 << (4 - i))
         glyph_data.append(row_data)
     
     char_expr = cg.RawExpression(f"'{char}'")

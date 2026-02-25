@@ -78,7 +78,7 @@ display:
 
         it.print(0, "\2"); // custom glyph test
       } else {
-        it.strftime("%H:%M:%S", now);
+        it.strftime("%H\3%M\3%S", now);
       }
     custom_glyphs:
       - char: 'H'
@@ -99,3 +99,21 @@ display:
           - " ### "
           - "  #  "
           - "     "
+      - char: '\3'
+        glyph:
+          - "     "
+          - "  #  "
+          - " ### "
+          - "## ##"
+          - " ### "
+          - "  #  "
+          - "     "
+      - char: 'C'
+        glyph:
+          - "##   "
+          - "##   "
+          - "  ## "
+          - " #  #"
+          - " #   "
+          - " #  #"
+          - "  ## "
