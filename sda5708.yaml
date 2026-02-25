@@ -1,0 +1,64 @@
+external_components:
+  - source:
+      type: local
+      path: components/
+
+esphome:
+  name: sdadisp-test
+
+esp32:
+  board: esp32-s3-devkitc1-n16r8
+  cpu_frequency: 240MHZ
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+
+ota:
+  - platform: esphome
+    password: ""
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: "SDA-Test Fallback Hotspot"
+    password: ""
+
+captive_portal:
+
+web_server:
+
+button:
+  - platform: restart
+    name: "Restart"
+
+time:
+  - platform: sntp
+    id: sntp_time
+
+text:
+  - platform: template
+    id: display_text
+    name: "Text"
+    optimistic: true
+    mode: text
+
+display:
+  - platform: sda5708
+    data_pin: GPIO3
+    clock_pin: GPIO13
+    load_pin: GPIO12
+    reset_pin: GPIO14
+    lambda: |-
+      auto now = id(sntp_time).now();
+      auto userText = id(display_text).state;
+
+      if (userText.length() > 0) {
+        it.print(userText.c_str());
+      } else {
+        it.strftime("%H%M%S", now);
+      }
