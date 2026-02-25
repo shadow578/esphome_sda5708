@@ -36,6 +36,20 @@ button:
   - platform: restart
     name: "Restart"
 
+  - platform: template
+    name: "Brightness +"
+    on_press:
+      then:
+        - sda5708.set_brightness:
+            brightness: !lambda "return id(sda).get_brightness() + 1;"
+
+  - platform: template
+    name: "Brightness -"
+    on_press:
+      then:
+        - sda5708.set_brightness:
+            brightness: !lambda "return id(sda).get_brightness() - 1;"
+
 time:
   - platform: sntp
     id: sntp_time
@@ -49,6 +63,7 @@ text:
 
 display:
   - platform: sda5708
+    id: sda
     data_pin: GPIO3
     clock_pin: GPIO13
     load_pin: GPIO12

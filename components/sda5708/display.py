@@ -1,6 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome import pins
+from esphome import automation, pins
 from esphome.components import display
 from esphome.const import (
   CONF_ID, 
@@ -10,7 +10,9 @@ from esphome.const import (
   CONF_RESET_PIN,
   CONF_BRIGHTNESS
 )
-
+from esphome.core import ID
+from esphome.cpp_generator import MockObj, TemplateArgsType
+from esphome.types import ConfigType
 
 CODEOWNERS = ["@shadow578"]
 DEPENDENCIES = []
@@ -18,12 +20,15 @@ DEPENDENCIES = []
 CONF_LOAD_PIN = "load_pin"
 CONF_LOW_PEAK_CURRENT = "reduce_peak_current"
 
-integration_ns = cg.esphome_ns.namespace("sda5708")
-SDADisplayComponent = integration_ns.class_(
+sda5708_ns = cg.esphome_ns.namespace("sda5708")
+SDADisplayComponent = sda5708_ns.class_(
   "SDA5708Component", 
   display.DisplayBuffer, 
   cg.PollingComponent
 )
+
+SetBrightnessAction = sda5708_ns.class_("SetBrightnessAction", automation.Action)
+
 
 CONFIG_SCHEMA = (
     display.BASIC_DISPLAY_SCHEMA.extend(
@@ -72,3 +77,27 @@ async def to_code(config):
             return_type=cg.void
         )
         cg.add(var.set_writer(lambda_))
+
+
+@automation.register_action(
+    "sda5708.set_brightness",
+    SetBrightnessAction,
+    cv.maybe_simple_value(
+        {
+            cv.GenerateID(): cv.use_id(SDADisplayComponent),
+            cv.Required(CONF_BRIGHTNESS): cv.templatable(cv.int_range(min=0, max=7)),
+        },
+        key=CONF_BRIGHTNESS,
+    ),
+)
+async def sda5708_set_brightness_to_code(
+    config: ConfigType,
+    action_id: ID,
+    template_arg: cg.TemplateArguments,
+    args: TemplateArgsType,
+) -> MockObj:
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    template_ = await cg.templatable(config[CONF_BRIGHTNESS], args, cg.uint8)
+    cg.add(var.set_brightness(template_))
+    return var

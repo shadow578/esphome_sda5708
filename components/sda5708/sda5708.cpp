@@ -158,10 +158,21 @@ namespace esphome::sda5708
     write_control_register(this->control_register_);
   }
 
+  uint8_t SDA5708Component::get_brightness() const
+  {
+    // invert brightness level from control register
+    return 7 - (this->control_register_.m_nBR & 0b111);
+  }
+
   void SDA5708Component::set_peak_current(const bool low_peak_current)
   {
     this->control_register_.m_bIP = low_peak_current;
     write_control_register(this->control_register_);
+  }
+
+  bool SDA5708Component::get_peak_current() const
+  {
+    return this->control_register_.m_bIP;
   }
 
   void SDA5708Component::write_glyph(const uint8_t digit, const SDAGlyph_t &glyph) const

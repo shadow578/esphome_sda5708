@@ -110,9 +110,15 @@ namespace esphome::sda5708
     /// @note Brightness level is inverted from the control register value.
     void set_brightness(const uint8_t brightness);
 
+    /// Get the current brightness level of the screen.
+    uint8_t get_brightness() const;
+
     /// Set peak current configuration of the screen
     /// @param low_peak_current Use reduced peak current (true; 12.5%) or maximum peak current (false)?
     void set_peak_current(const bool low_peak_current);
+
+    /// Get the current peak current configuration of the screen.
+    bool get_peak_current() const;
 
     /// Write a raw glyph to the screen.
     /// @param digit The digit to be written (0-7, 0 is the leftmost digit)
@@ -157,5 +163,14 @@ namespace esphome::sda5708
 
     /// Delay for a short time to allow the screen to process commands.
     void screen_delay() const;
+  };
+
+  template <typename... Ts>
+  class SetBrightnessAction : public Action<Ts...>, public Parented<SDA5708Component>
+  {
+  public:
+    TEMPLATABLE_VALUE(uint8_t, brightness)
+
+    void play(const Ts &...x) override { this->parent_->set_brightness(this->brightness_.value(x...)); }
   };
 } // namespace esphome::sda5708
