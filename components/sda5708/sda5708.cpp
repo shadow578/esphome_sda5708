@@ -1,4 +1,5 @@
 #include "sda5708.h"
+
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
@@ -57,19 +58,16 @@ namespace esphome::sda5708
 
   void SDA5708Component::display()
   {
-    const SDAGlyph_t smile = {
-        0b00000,
-        0b01010,
-        0b00000,
-        0b00000,
-        0b10001,
-        0b01110,
-        0b00000 //
-    };
+    const auto &font = get_font();
 
     for (uint8_t i = 0; i < this->display_buffer_.size(); i++)
     {
-      write_glyph(i, smile); // TODO no font yet :)
+      char c = this->display_buffer_[i];
+
+      if (const auto glyph_opt = font.get_glyph(c); glyph_opt.has_value())
+        write_glyph(i, glyph_opt.value());
+      else
+        ESP_LOGW(TAG, "No glyph found for character '%c' (0x%02X)", c, static_cast<uint8_t>(c));
     }
   }
 #pragma endregion
@@ -259,7 +257,10 @@ namespace esphome::sda5708
 
   void SDA5708Component::screen_delay() const
   {
-    // TODO insert delay here
+    // the screen requires a short delay for data processing.
+    // per SB-Projects' post, the minimum is ~200ns, but to be safe
+    // we use a generous 5x margin.
+    delayMicroseconds(1);
   }
 #pragma endregion
 } // namespace esphome::sda5708

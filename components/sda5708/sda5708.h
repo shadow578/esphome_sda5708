@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <array>
+#include <map>
+#include <optional>
 
 #include "esphome/core/hal.h"
 #include "esphome/core/component.h"
@@ -15,8 +17,26 @@ namespace esphome::sda5708
   /// with the 5 least significant bits representing the 5 columns (1: lit, 0: unlit).
   typedef std::array<uint8_t, 7> SDAGlyph_t;
 
-  class SDA5708Component;
+  /// Font definition for SDA5708.
+  class SDA5708Font
+  {
+  public:
+    /// Get the glyph data for a given character.
+    /// @param c The char to get the glyph data for.
+    /// @return The SDAGlyph_t to write the glyph data to.
+    std::optional<const SDAGlyph_t> get_glyph(const char c) const;
 
+    /// Set a custom glyph for a given character. This may overwrite existing default glyphs.
+    /// @param c The char to set the glyph data for.
+    /// @param glyph The SDAGlyph_t containing the glyph data to set.
+    void set_glyph(const char c, const SDAGlyph_t &glyph);
+
+  private:
+    static const std::map<char, SDAGlyph_t> default_glyphs_;
+    std::map<char, SDAGlyph_t> user_glyphs_;
+  };
+
+  class SDA5708Component;
   using sda5708_writer_t = display::DisplayWriter<SDA5708Component>;
 
   /// ESPHome component for controlling a
@@ -35,10 +55,17 @@ namespace esphome::sda5708
     /// Send the current display buffer to the screen.
     void display();
 
-  private: // Print & Writer API
-    std::array<char, 8> display_buffer_{};
+    /// Get the font used by this component for rendering characters.
+    SDA5708Font &get_font()
+    {
+      return this->font_;
+    }
 
-  public:
+  private:
+    std::array<char, 8> display_buffer_{};
+    SDA5708Font font_;
+
+  public: // Print & Writer API
     /// Evaluate the printf-format and print the result at the given position.
     uint8_t printf(uint8_t pos, const char *format, ...) __attribute__((format(printf, 3, 4)));
     /// Evaluate the printf-format and print the result at position 0.
