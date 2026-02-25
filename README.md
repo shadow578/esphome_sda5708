@@ -31,6 +31,10 @@ The `#LOAD`, `DATA`, `SDCLOCK`, and `#RESET` pins can be connected to any availa
 To use this component, add the following to your ESPHome configuration:
 
 ```yaml
+external_components:
+  - source: github://shadow578/esphome_sda5708@main
+    components: [sda5708]
+
 display:
   - platform: sda5708
     data_pin: GPIO3

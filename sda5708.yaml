@@ -3,6 +3,9 @@ external_components:
       type: local
       path: components/
 
+  #- source: github://shadow578/esphome_sda5708@main
+  #  components: [sda5708]
+
 esphome:
   name: sdadisp-test
 
