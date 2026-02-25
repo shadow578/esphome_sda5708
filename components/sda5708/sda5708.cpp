@@ -32,6 +32,8 @@ namespace esphome::sda5708
     LOG_PIN("  Clock Pin: ", this->clock_pin_);
     LOG_PIN("  Load Pin: ", this->load_pin_);
     LOG_PIN("  Reset Pin: ", this->reset_pin_);
+    ESP_LOGCONFIG(TAG, "  Initial Brightness: %u", this->init_brightness_);
+    ESP_LOGCONFIG(TAG, "  Initial Peak Current: %s", this->init_peak_current_ ? "12.5%" : "Maximum");
     LOG_UPDATE_INTERVAL(this);
   }
 
