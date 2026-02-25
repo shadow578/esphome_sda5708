@@ -8,6 +8,10 @@
  */
 typedef std::array<uint8_t, 6> DigitData_t;
 
+/**
+ * Screen driver for Siemens SDA5708-24 8 character 5x7 dot matrix LED display.
+ * Based on information from https://www.sbprojects.net/knowledge/footprints/sda5708/index.php
+ */
 class SDAScreen
 {
 public:
@@ -39,7 +43,8 @@ public:
 
   /**
    * Set the peak current of the screen
-   * @param p_bLowPeakCurrent Use reduced peak current (12.5%)?
+   * @param p_bLowPeakCurrent Use reduced peak current (12.5%) or maximum peak current?
+   * @note The screen tends to flicker slightly with low peak current.
    */
   void SetPeakCurrent(const bool p_bLowPeakCurrent);
 
