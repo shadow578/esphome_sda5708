@@ -8,6 +8,7 @@ from esphome.const import (
   CONF_CLOCK_PIN,
   CONF_DATA_PIN,
   CONF_RESET_PIN,
+  CONF_BRIGHTNESS
 )
 
 
@@ -15,6 +16,7 @@ CODEOWNERS = ["@shadow578"]
 DEPENDENCIES = []
 
 CONF_LOAD_PIN = "load_pin"
+CONF_LOW_PEAK_CURRENT = "reduce_peak_current"
 
 integration_ns = cg.esphome_ns.namespace("sda5708")
 SDADisplayComponent = integration_ns.class_(
@@ -32,6 +34,9 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_CLOCK_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_LOAD_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
+
+            cv.Optional(CONF_BRIGHTNESS): cv.int_range(min=0, max=7),
+            cv.Optional(CONF_LOW_PEAK_CURRENT): cv.boolean,
         }
     )
     .extend(cv.polling_component_schema("1s"))
@@ -52,6 +57,12 @@ async def to_code(config):
     cg.add(var.set_clock_pin(pin_clock))
     cg.add(var.set_load_pin(pin_load))
     cg.add(var.set_reset_pin(pin_reset))
+
+    # initial control register
+    if CONF_LOW_PEAK_CURRENT in config:
+        cg.add(var.set_init_peak_current(config[CONF_LOW_PEAK_CURRENT]))
+    if CONF_BRIGHTNESS in config:
+        cg.add(var.set_init_brightness(config[CONF_BRIGHTNESS]))
 
     # rendering
     if CONF_LAMBDA in config:

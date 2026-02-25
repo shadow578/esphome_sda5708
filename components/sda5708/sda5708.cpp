@@ -184,6 +184,10 @@ namespace esphome::sda5708
 
     // reset internal control register mirror to default values
     control_register_ = SDAControlRegister();
+
+    // apply control register settings set by codegen after reset
+    set_peak_current(init_peak_current_);
+    set_brightness(init_brightness_);
   }
 
   void SDA5708Component::write_control_register(const SDAControlRegister &data) const

@@ -55,12 +55,15 @@ namespace esphome::sda5708
     /// Evaluate the strftime-format and print the result at position 0.
     uint8_t strftime(const char *format, ESPTime time) __attribute__((format(strftime, 2, 0)));
 
-  private: // Setters for CodeGen
+  private: // CodeGen API
     sda5708_writer_t writer_;
     GPIOPin *data_pin_;
     GPIOPin *clock_pin_;
     GPIOPin *load_pin_;
     GPIOPin *reset_pin_;
+
+    bool init_peak_current_ = false;
+    uint8_t init_brightness_ = 7; // 0-7
 
   public:
     void set_writer(sda5708_writer_t &&writer)
@@ -86,6 +89,16 @@ namespace esphome::sda5708
     void set_reset_pin(GPIOPin *pin)
     {
       this->reset_pin_ = pin;
+    }
+
+    void set_init_peak_current(const bool low_peak_current)
+    {
+      this->init_peak_current_ = low_peak_current;
+    }
+
+    void set_init_brightness(const uint8_t brightness)
+    {
+      this->init_brightness_ = brightness;
     }
 
   public: // High-Level Screen API
