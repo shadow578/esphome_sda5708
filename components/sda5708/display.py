@@ -19,6 +19,10 @@ DEPENDENCIES = []
 
 CONF_LOAD_PIN = "load_pin"
 CONF_LOW_PEAK_CURRENT = "reduce_peak_current"
+CONF_CUSTOM_GLYPHS = "custom_glyphs"
+
+CONF_GLYPH_CHAR = "char"
+CONF_GLYPH_GLYPH = "glyph"
 
 sda5708_ns = cg.esphome_ns.namespace("sda5708")
 SDADisplayComponent = sda5708_ns.class_(
@@ -29,6 +33,37 @@ SDADisplayComponent = sda5708_ns.class_(
 
 SetBrightnessAction = sda5708_ns.class_("SetBrightnessAction", automation.Action)
 
+
+def validate_custom_glyph(value):
+    # glyphs require a list of strings, each representing a row of the glyph.
+    # each string must be exactly 5 characters long, and can only contain ' ' or '#'.
+    # the list must contain exactly 7 rows.
+    if not isinstance(value, list):
+        raise cv.Invalid("Glyph must be a list of strings.")
+    if len(value) != 7:
+        raise cv.Invalid("Glyph must have exactly 7 rows.")
+    
+    for row in value:
+        if not isinstance(row, str):
+            raise cv.Invalid("Each row of the glyph must be a string.")
+        if len(row) != 5:
+            raise cv.Invalid("Each row of the glyph must be exactly 5 characters long.")
+        for char in row:
+            if char not in [' ', '#']:
+                raise cv.Invalid("Each character in the glyph must be either ' ' or '#'.")
+
+    return value
+
+
+CUSTOM_GLYPH_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_GLYPH_CHAR): cv.string,
+        cv.Required(CONF_GLYPH_GLYPH): cv.All(
+            cv.ensure_list(cv.string), 
+            validate_custom_glyph
+        ),
+    }
+)
 
 CONFIG_SCHEMA = (
     display.BASIC_DISPLAY_SCHEMA.extend(
@@ -42,6 +77,8 @@ CONFIG_SCHEMA = (
 
             cv.Optional(CONF_BRIGHTNESS): cv.int_range(min=0, max=7),
             cv.Optional(CONF_LOW_PEAK_CURRENT): cv.boolean,
+
+            cv.Optional(CONF_CUSTOM_GLYPHS): cv.ensure_list(CUSTOM_GLYPH_SCHEMA),
         }
     )
     .extend(cv.polling_component_schema("1s"))
@@ -77,6 +114,44 @@ async def to_code(config):
             return_type=cg.void
         )
         cg.add(var.set_writer(lambda_))
+
+    # custom glyphs
+    if CONF_CUSTOM_GLYPHS in config:
+        for glyph_config in config[CONF_CUSTOM_GLYPHS]:
+            char_expr, glyph_expr = await custom_glyph_to_code(glyph_config)
+            cg.add(var.get_font().set_glyph(char_expr, glyph_expr))
+
+#    char = cg.RawExpression("'H'")
+#    glyph = cg.RawExpression("""
+#{
+#    0b00000,
+#    0b01010,
+#    0b00000,
+#    0b00000,
+#    0b10001,
+#    0b01110,
+#    0b00000
+#}
+#""")
+#
+#    cg.add(var.get_font().set_glyph(char, glyph))
+
+
+async def custom_glyph_to_code(config):
+    char = config[CONF_GLYPH_CHAR]
+    glyph = config[CONF_GLYPH_GLYPH]
+
+    glyph_data = []
+    for row in glyph:
+        row_data = 0
+        for i, c in enumerate(row):
+            if c == '#':
+                row_data |= (1 << i)
+        glyph_data.append(row_data)
+    
+    char_expr = cg.RawExpression(f"'{char}'")
+    glyph_expr = cg.RawExpression(f"{{{', '.join(f'0b{row:05b}' for row in glyph_data)}}}")
+    return char_expr, glyph_expr
 
 
 @automation.register_action(

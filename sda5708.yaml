@@ -75,6 +75,27 @@ display:
 
       if (userText.length() > 0) {
         it.print(userText.c_str());
+
+        it.print(0, "\2"); // custom glyph test
       } else {
-        it.strftime("%H%M%S", now);
+        it.strftime("%H:%M:%S", now);
       }
+    custom_glyphs:
+      - char: 'H'
+        glyph:
+          - "     "
+          - " # # "
+          - "     "
+          - "     "
+          - "#   #"
+          - " ### "
+          - "     "
+      - char: '\2'
+        glyph:
+          - "     "
+          - " # # "
+          - "#####"
+          - "#####"
+          - " ### "
+          - "  #  "
+          - "     "
