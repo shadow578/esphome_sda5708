@@ -1,6 +1,12 @@
 #include "sdascreen.h"
 #include <Arduino.h>
 
+static inline void ScreenDelay()
+{
+  // minimum would be ~200ns, add some (5x) safety margin
+  delayMicroseconds(1);
+}
+
 void SDAScreen::Initialize() const
 {
   pinMode(m_nLoadPin, OUTPUT);
@@ -17,9 +23,9 @@ void SDAScreen::Initialize() const
 void SDAScreen::Reset()
 {
   digitalWrite(m_nResetPin, LOW);
-  delay(1);
+  ScreenDelay();
   digitalWrite(m_nResetPin, HIGH);
-  delay(1);
+  ScreenDelay();
 
   // set internal control register mirror to default values after reset
   m_ControlRegister = ControlRegisterData();
@@ -128,14 +134,14 @@ void SDAScreen::WriteByte(const uint8_t p_nData) const
     digitalWrite(m_nDataPin, (p_nData >> i) & 1);
 
     digitalWrite(m_nSdclkPin, HIGH);
-    delay(1);
+    ScreenDelay();
     digitalWrite(m_nSdclkPin, LOW);
-    delay(1);
+    ScreenDelay();
   }
 
   // load HIGH to latch data in
   digitalWrite(m_nLoadPin, HIGH);
 
   // allow time to process
-  delay(1);
+  ScreenDelay();
 }
