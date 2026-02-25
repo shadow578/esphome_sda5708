@@ -121,21 +121,6 @@ async def to_code(config):
             char_expr, glyph_expr = await custom_glyph_to_code(glyph_config)
             cg.add(var.get_font().set_glyph(char_expr, glyph_expr))
 
-#    char = cg.RawExpression("'H'")
-#    glyph = cg.RawExpression("""
-#{
-#    0b00000,
-#    0b01010,
-#    0b00000,
-#    0b00000,
-#    0b10001,
-#    0b01110,
-#    0b00000
-#}
-#""")
-#
-#    cg.add(var.get_font().set_glyph(char, glyph))
-
 
 async def custom_glyph_to_code(config):
     char = config[CONF_GLYPH_CHAR]
