@@ -53,6 +53,38 @@ void SDAScreen::WriteDigit(const uint8_t p_nDigit, const DigitData_t &p_aData) c
   WriteDigitData(p_aData);
 }
 
+void SDAScreen::WriteDigit(const uint8_t p_nDigit, const char p_cChar) const
+{
+  DigitData_t data;
+  if (GetFontData(p_cChar, data))
+  {
+    WriteDigit(p_nDigit, data);
+  }
+
+  // attempt fallback to NUL
+  else if (GetFontData('\0', data))
+  {
+    WriteDigit(p_nDigit, data);
+  }
+}
+
+void SDAScreen::SetCustomCharacter(const char p_cChar, const DigitData_t &p_aData)
+{
+  g_mFont[p_cChar] = p_aData;
+}
+
+bool SDAScreen::GetFontData(const char p_cChar, DigitData_t &p_aData)
+{
+  auto it = g_mFont.find(p_cChar);
+  if (it != g_mFont.end())
+  {
+    p_aData = it->second;
+    return true;
+  }
+
+  return false;
+}
+
 void SDAScreen::WriteControlRegister(const ControlRegisterData &p_Data) const
 {
   uint8_t data = 0b11000000;              // select control register with D7=1, D6=1 and D4=0
@@ -76,7 +108,7 @@ void SDAScreen::SelectDigit(const uint8_t p_nDigit) const
 
 void SDAScreen::WriteDigitData(const DigitData_t &p_aRowData) const
 {
-  for (int i = 0; i < 6; i++)
+  for (int i = 0; i < 7; i++)
   {
     uint8_t data = 0b00000000; // column data register with D7=0, D6=0, D5=0
     data |= (p_aRowData[i] & 0b11111);

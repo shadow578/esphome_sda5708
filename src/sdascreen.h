@@ -1,12 +1,14 @@
 #pragma once
 #include <cstdint>
 #include <array>
+#include <map>
 
 /**
- * An array of 6 bytes representing the row data for the selected digit.
- * Only the 5 least significant bits of each byte are used.
+ * Display data for a single 5x7 pixel digit on the screen.
+ * Each byte represents one row (of the 7 rows) of the digit,
+ * with the 5 least significant bits representing the 5 columns (1: lit, 0: unlit).
  */
-typedef std::array<uint8_t, 6> DigitData_t;
+typedef std::array<uint8_t, 7> DigitData_t;
 
 /**
  * Screen driver for Siemens SDA5708-24 8 character 5x7 dot matrix LED display.
@@ -54,6 +56,33 @@ public:
    * @param p_aData Digit column data to write.
    */
   void WriteDigit(const uint8_t p_nDigit, const DigitData_t &p_aData) const;
+
+  /**
+   * Write a character to the screen.
+   * @param p_nDigit The digit to be written (0-7, 0 is the leftmost digit)
+   * @param p_cChar The character to be written.
+   */
+  void WriteDigit(const uint8_t p_nDigit, const char p_cChar) const;
+
+  /**
+   * Set a custom character in the font map.
+   * This allows you to define custom characters or override existing ones.
+   * @param p_cChar The character to be set.
+   * @param p_aData The 5x7 pixel data for the character.
+   * @note Font data is shared across all instances of SDAScreen, so this will affect all screens using this driver.
+   */
+  static void SetCustomCharacter(const char p_cChar, const DigitData_t &p_aData);
+
+private:
+  static std::map<char, DigitData_t> g_mFont;
+
+  /**
+   * Lookup font data from the global font map.
+   * @param p_cChar The character to look up.
+   * @param p_aData Output parameter to store the font data for the character.
+   * @return true if the character was found in the font map, false otherwise.
+   */
+  static bool GetFontData(const char p_cChar, DigitData_t &p_aData);
 
 private: // Low-Level API
   struct ControlRegisterData

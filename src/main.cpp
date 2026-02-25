@@ -14,7 +14,8 @@ const DigitData_t smile = {
     0b00000,
     0b00000,
     0b10001,
-    0b01110 //
+    0b01110,
+    0b00000 //
 };
 
 void setup()
@@ -66,6 +67,17 @@ void loop()
 
     delay(1000);
   }
+
+  screen.Clear();
+  screen.WriteDigit(0, 'H');
+  screen.WriteDigit(1, 'E');
+  screen.WriteDigit(2, 'L');
+  screen.WriteDigit(3, 'L');
+  screen.WriteDigit(4, 'O');
+  screen.WriteDigit(5, '!');
+
+  screen.SetCustomCharacter('\5', smile);
+  screen.WriteDigit(7, '\5');
 
   delay(5000);
 }
