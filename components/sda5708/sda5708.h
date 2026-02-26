@@ -65,6 +65,12 @@ namespace esphome::sda5708
     std::array<char, 8> display_buffer_{};
     SDA5708Font font_;
 
+    /// Remaining frames to skip auto-redraw for.
+    /// if >= 0, skip auto-redraw and decrement this counter.
+    /// if -1, auto-redraw is disabled indefinitely until re-enabled.
+    /// if 0, auto-redraw is enabled normally.
+    int automatic_redraw_skip_frames_ = 0;
+
   public: // Print & Writer API
     /// Evaluate the printf-format and print the result at the given position.
     uint8_t printf(uint8_t pos, const char *format, ...) __attribute__((format(printf, 3, 4)));
@@ -81,6 +87,14 @@ namespace esphome::sda5708
 
     /// Evaluate the strftime-format and print the result at position 0.
     uint8_t strftime(const char *format, ESPTime time) __attribute__((format(strftime, 2, 0)));
+
+    /// Disable automatic redraw (via writer lambda) for a certain number of frames.
+    /// The screen buffer is still written to the screen, the lambda is just not called to generate it.
+    /// @param frames The number of frames to disable automatic redraw for. If -1, automatic redraw is disabled indefinitely until re-enabled.
+    void pause_automatic_redraw(const int frames = -1);
+
+    /// Manually re-enable automatic redraw after it has been disabled via `pause_automatic_redraw()`.
+    void resume_automatic_redraw();
 
   private: // CodeGen API
     sda5708_writer_t writer_;

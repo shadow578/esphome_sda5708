@@ -39,12 +39,20 @@ namespace esphome::sda5708
 
   void SDA5708Component::update()
   {
-    if (this->writer_.has_value())
+    // writer set and auto-redraw enabled?
+    if (this->writer_.has_value() && this->automatic_redraw_skip_frames_ == 0)
     {
       clear();
       (*this->writer_)(*this);
     }
 
+    // decrement auto-redraw
+    if (this->automatic_redraw_skip_frames_ > 0)
+    {
+      this->automatic_redraw_skip_frames_--;
+    }
+
+    // send buffer to screen
     display();
   }
 
@@ -137,6 +145,16 @@ namespace esphome::sda5708
   uint8_t SDA5708Component::strftime(const char *format, ESPTime time)
   {
     return strftime(0, format, time);
+  }
+
+  void SDA5708Component::pause_automatic_redraw(const int frames)
+  {
+    this->automatic_redraw_skip_frames_ = frames;
+  }
+
+  void SDA5708Component::resume_automatic_redraw()
+  {
+    this->automatic_redraw_skip_frames_ = 0;
   }
 #pragma endregion
 

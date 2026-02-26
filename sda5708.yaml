@@ -53,6 +53,31 @@ button:
         - sda5708.set_brightness:
             brightness: !lambda "return id(sda).get_brightness() - 1;"
 
+  - platform: template
+    name: "Auto-Redraw TST 10 frames"
+    on_press:
+      then:
+        - lambda: |-
+            id(sda).pause_automatic_redraw(10);
+            id(sda).clear();
+            id(sda).print("AR 10f");
+
+  - platform: template
+    name: "Auto-Redraw TST inf"
+    on_press:
+      then:
+        - lambda: |-
+            id(sda).pause_automatic_redraw();
+            id(sda).clear();
+            id(sda).print("AR inf");
+
+  - platform: template
+    name: "Auto-Redraw TST reenable"
+    on_press:
+      then:
+        - lambda: |-
+            id(sda).resume_automatic_redraw();
+
 time:
   - platform: sntp
     id: sntp_time
