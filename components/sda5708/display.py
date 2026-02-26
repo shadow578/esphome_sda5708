@@ -19,6 +19,7 @@ DEPENDENCIES = []
 
 CONF_LOAD_PIN = "load_pin"
 CONF_LOW_PEAK_CURRENT = "reduce_peak_current"
+CONF_ROTATE_SCREEN = "rotate_screen"
 CONF_CUSTOM_GLYPHS = "custom_glyphs"
 
 CONF_GLYPH_CHAR = "char"
@@ -78,6 +79,8 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_BRIGHTNESS): cv.int_range(min=0, max=7),
             cv.Optional(CONF_LOW_PEAK_CURRENT): cv.boolean,
 
+            cv.Optional(CONF_ROTATE_SCREEN): cv.boolean,
+
             cv.Optional(CONF_CUSTOM_GLYPHS): cv.ensure_list(CUSTOM_GLYPH_SCHEMA),
         }
     )
@@ -105,6 +108,9 @@ async def to_code(config):
         cg.add(var.set_init_peak_current(config[CONF_LOW_PEAK_CURRENT]))
     if CONF_BRIGHTNESS in config:
         cg.add(var.set_init_brightness(config[CONF_BRIGHTNESS]))
+
+    if CONF_ROTATE_SCREEN in config:
+        cg.add(var.set_rotate_screen(config[CONF_ROTATE_SCREEN]))
 
     # rendering
     if CONF_LAMBDA in config:

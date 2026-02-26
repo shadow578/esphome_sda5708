@@ -229,8 +229,12 @@ namespace esphome::sda5708
     write_byte(cr);
   }
 
-  void SDA5708Component::select_digit(const uint8_t digit) const
+  void SDA5708Component::select_digit(const uint8_t _digit) const
   {
+    auto digit = _digit;
+    if (this->rotate_screen_)
+      digit = 7 - digit;
+
     if (digit > 7)
       return;
 
@@ -244,8 +248,24 @@ namespace esphome::sda5708
   {
     for (int i = 0; i < 7; i++)
     {
-      uint8_t cd = 0b00000000;   // column data register with D7=0, D6=0, D5=0
-      cd |= (data[i] & 0b11111); // remaining 5 bits for column data
+      int j = i;
+      if (this->rotate_screen_)
+        j = 6 - j;
+
+      uint8_t cols = data[j];
+      if (this->rotate_screen_)
+      {
+        uint8_t rcols = 0;
+        for (int bit = 0; bit < 5; bit++)
+        {
+          rcols |= ((cols >> bit) & 0x01) << (4 - bit);
+        }
+
+        cols = rcols;
+      }
+
+      uint8_t cd = 0b00000000; // column data register with D7=0, D6=0, D5=0
+      cd |= (cols & 0b11111);  // remaining 5 bits for column data
 
       write_byte(cd);
     }

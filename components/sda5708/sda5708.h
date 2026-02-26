@@ -106,6 +106,9 @@ namespace esphome::sda5708
     bool init_peak_current_ = false;
     uint8_t init_brightness_ = 7; // 0-7
 
+    /// rotate screen by 180 degrees (mounted upside down)
+    bool rotate_screen_ = false;
+
   public:
     void set_writer(sda5708_writer_t &&writer)
     {
@@ -140,6 +143,11 @@ namespace esphome::sda5708
     void set_init_brightness(const uint8_t brightness)
     {
       this->init_brightness_ = brightness;
+    }
+
+    void set_rotate_screen(const bool rotate)
+    {
+      this->rotate_screen_ = rotate;
     }
 
   public: // High-Level Screen API
